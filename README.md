@@ -33,7 +33,7 @@
 ## 🚀 Live Demo
 
 **▶ Try it now on Vercel:**  
-[https://beefocused.vercel.app](https://beefocused.vercel.app)
+[https://bee-focused.vercel.app/](https://bee-focused.vercel.app/)
 
 ---
 
