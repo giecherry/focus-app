@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+
 @theme{
     --color-primary: #ffcf0f;        /* Bee Yellow */
     --color-secondary: #4a4a4a;      /* Charcoal Black */
@@ -8,8 +9,26 @@
     --color-surface: #fefefe;        /* Extra White */
     --color-dark: #1a1a1a;           /* Deep Dark */
     --color-dark-muted: #2c2c2c;     /* Soft Dark Gray */
-}
+    --font-lexend:  "Lexend", sans-serif;
+  }
 
+@layer base {
+  body {
+    @apply bg-[var(--color-surface)] text-[var(--color-dark)] ;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold text-[var(--color-secondary)];
+  }
+
+  p {
+    @apply text-[var(--color-secondary)] leading-relaxed;
+  }
+
+  a {
+    @apply text-[var(--color-primary)] hover:text-yellow-500 transition-colors;
+  }
+}
 @layer components {
   button {
     @apply px-5 py-2 font-semibold text-black bg-[var(--color-primary)] rounded-lg transition-all duration-300 shadow-md;
