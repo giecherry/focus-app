@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme{
+    --color-primary: #ffcf0f;        /* Bee Yellow */
+    --color-secondary: #4a4a4a;      /* Charcoal Black */
+    --color-neutral: #ffffff;        /* White */
+    --color-muted: #f4f4f4;          /* Soft Light Gray */
+    --color-surface: #fefefe;        /* Extra White */
+    --color-dark: #1a1a1a;           /* Deep Dark */
+    --color-dark-muted: #2c2c2c;     /* Soft Dark Gray */
+}
+
+@layer components {
+  button {
+    @apply px-5 py-2 font-semibold text-black bg-[var(--color-primary)] rounded-lg transition-all duration-300 shadow-md;
+    box-shadow: 3px 3px 6px #cfcfcf, -3px -3px 6px #ffffff;
+  }
+
+  button:hover {
+    @apply bg-yellow-400;
+    box-shadow: 2px 2px 5px #bbbbbb, -2px -2px 5px #ffffff;
+  }
+
+  div {
+    @apply p-6 bg-[var(--color-surface)] text-black rounded-xl shadow-md transition-colors;
+  }
+
+  .tag {
+    @apply text-xs font-semibold px-3 py-1 bg-[var(--color-primary)] text-black rounded-full shadow-sm;
+  }
+}
