@@ -40,7 +40,7 @@
     box-shadow: 2px 2px 5px #bbbbbb, -2px -2px 5px #ffffff;
   }
 
-  div {
+  .card {
     @apply p-6 bg-[var(--color-surface)] text-black rounded-xl shadow-md transition-colors;
   }
 
