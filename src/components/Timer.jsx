@@ -138,13 +138,13 @@ function Timer() {
           <>
             <button
               onClick={stopSession}
-              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-red-500 rounded-lg shadow-md hover:bg-red-400 transition text-sm sm:text-base"
+              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-[#f7006b] rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
             >
               Stop Session
             </button>
             <button
               onClick={startCheckIn}
-              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-blue-500 rounded-lg shadow-md hover:bg-blue-400 transition text-sm sm:text-base"
+              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-[#85d8ff] rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm sm:text-base"
             >
               Start Check-In
             </button>

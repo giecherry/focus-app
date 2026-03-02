@@ -37,7 +37,7 @@ function SessionLog() {
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
         <button
           onClick={copyToClipboard}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-400 transition text-sm sm:text-base"
+          className="px-4 py-2 bg-[#85d8ff] text-white rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm sm:text-base"
         >
           Copy to Clipboard
         </button>
@@ -49,7 +49,7 @@ function SessionLog() {
         </button>
         <button
           onClick={resetLog}
-          className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-400 transition text-sm sm:text-base"
+          className="px-4 py-2 bg-[#f7006b] text-white rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
         >
           Reset Log
         </button>

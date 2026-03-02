@@ -95,7 +95,7 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
 
                     {/* Pulsing Aura for active state */}
                     {isActive && (
-                        <span className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-20"></span>
+                        <span className="absolute inset-0 rounded-full bg-[#f7006b] animate-ping opacity-20"></span>
                     )}
                 </div>
 
@@ -111,7 +111,7 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
                 {/* Save Button */}
                 <button
                     onClick={saveTranscript}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-400 transition"
+                    className="px-6 py-2 bg-[#85d8ff] text-white rounded-lg shadow-md hover:bg-[#9de0ff] transition"
                 >
                     Save
                 </button>
