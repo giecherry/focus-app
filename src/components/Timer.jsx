@@ -66,11 +66,11 @@ function Timer() {
   }, []);
 
   return (
-    <section className="bg-gray-900 text-white p-6 rounded-2xl shadow-lg border border-yellow-400 flex flex-col items-center">
-      <h2 className="text-2xl font-semibold mb-4 text-yellow-300">Focus Timer</h2>
+    <section className="bg-gray-900 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-yellow-400 flex flex-col items-center">
+      <h2 className="text-lg sm:text-2xl font-semibold mb-4 text-yellow-300">Focus Timer</h2>
 
       <div className="w-full mb-4">
-        <label className="block text-sm text-yellow-300 mb-2">Session Duration (hours):</label>
+        <label className="block text-xs sm:text-sm text-yellow-300 mb-2">Session Duration (hours):</label>
         <select
           value={sessionDuration / 3600}
           onChange={(e) => {
@@ -79,7 +79,7 @@ function Timer() {
             setSessionRemaining(newDuration);
           }}
           disabled={isRunning}
-          className="w-full bg-gray-800 text-white rounded-lg p-2"
+          className="w-full bg-gray-800 text-white rounded-lg p-2 text-xs sm:text-sm"
         >
           {[...Array(12)].map((_, i) => (
             <option key={i} value={i + 1}>
@@ -90,7 +90,7 @@ function Timer() {
       </div>
 
       <div className="w-full mb-4">
-        <label className="block text-sm text-yellow-300 mb-2">Interval Duration (minutes):</label>
+        <label className="block text-xs sm:text-sm text-yellow-300 mb-2">Interval Duration (minutes):</label>
         <select
           value={intervalDuration / 60}
           onChange={(e) => {
@@ -99,7 +99,7 @@ function Timer() {
             setIntervalRemaining(newInterval);
           }}
           disabled={isRunning}
-          className="w-full bg-gray-800 text-white rounded-lg p-2"
+          className="w-full bg-gray-800 text-white rounded-lg p-2 text-xs sm:text-sm"
         >
           {[15, 20, 25, 30, 45, 60].map((minutes) => (
             <option key={minutes} value={minutes}>
@@ -110,26 +110,26 @@ function Timer() {
       </div>
 
       <div className="text-center mb-4">
-        <div className="text-6xl font-mono">
+        <div className="text-4xl sm:text-6xl font-mono">
           {Math.floor(intervalRemaining / 60)}:{(intervalRemaining % 60).toString().padStart(2, "0")}
         </div>
-        <div className="text-sm mt-1 text-yellow-300">Interval Timer</div>
+        <div className="text-xs sm:text-sm mt-1 text-yellow-300">Interval Timer</div>
       </div>
 
       <div className="text-center mb-4">
-        <div className="text-6xl font-mono">
+        <div className="text-4xl sm:text-6xl font-mono">
           {Math.floor(sessionRemaining / 3600)}:
           {Math.floor((sessionRemaining % 3600) / 60).toString().padStart(2, "0")}:
           {(sessionRemaining % 60).toString().padStart(2, "0")}
         </div>
-        <div className="text-sm mt-1 text-yellow-300">Session Timer</div>
+        <div className="text-xs sm:text-sm mt-1 text-yellow-300">Session Timer</div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
         {!isRunning && (
           <button
             onClick={startSession}
-            className="px-5 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition"
+            className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
           >
             Start Session
           </button>
@@ -138,13 +138,13 @@ function Timer() {
           <>
             <button
               onClick={stopSession}
-              className="px-5 py-2 font-semibold text-black bg-red-500 rounded-lg shadow-md hover:bg-red-400 transition"
+              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-red-500 rounded-lg shadow-md hover:bg-red-400 transition text-sm sm:text-base"
             >
               Stop Session
             </button>
             <button
               onClick={startCheckIn}
-              className="px-5 py-2 font-semibold text-black bg-blue-500 rounded-lg shadow-md hover:bg-blue-400 transition"
+              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-blue-500 rounded-lg shadow-md hover:bg-blue-400 transition text-sm sm:text-base"
             >
               Start Check-In
             </button>
@@ -156,7 +156,7 @@ function Timer() {
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);
-          resumeSession(); // Resume the timer after the modal is closed
+          resumeSession();
         }}
       />
     </section>

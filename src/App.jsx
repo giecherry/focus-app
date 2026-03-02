@@ -14,13 +14,12 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-surface)] text-[var(--color-dark)] px-6 py-10 flex flex-col items-center font-lexend">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--color-surface)] text-[var(--color-dark)] px-6 py-10 font-lexend">
       <Header />
       <main className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8">
         <Timer onAddLogEntry={setSessionLog} />
         <SessionLog log={sessionLog} onResetLog={handleResetLog} />
       </main>
-
       <Footer />
     </div>
   );
