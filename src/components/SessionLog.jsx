@@ -1,59 +1,58 @@
-import React from "react";
-import { jsPDF } from "jspdf"; 
+import { jsPDF } from "jspdf";
+import useStore from "../store/useStore";
 
-function SessionLog({ log, onResetLog }) {
+function SessionLog() {
+  const sessionLog = useStore((state) => state.sessionLog);
+  const resetLog = useStore((state) => state.resetLog);
+
   const copyToClipboard = () => {
-    const logText = log.join("\n");
-    navigator.clipboard.writeText(logText).then(() => {
-      alert("Session log copied to clipboard!");
-    });
+    const logText = sessionLog.join("\n");
+    navigator.clipboard.writeText(logText);
+    alert("Session log copied to clipboard!");
   };
 
   const exportToPDF = () => {
+    const logText = sessionLog.join("\n");
     const doc = new jsPDF();
-    doc.text("BeeFocused Session Log", 10, 10);
-    log.forEach((entry, index) => {
-      doc.text(`${index + 1}. ${entry}`, 10, 20 + index * 10);
-    });
+    doc.text(logText, 10, 10);
     doc.save("session-log.pdf");
   };
 
   return (
-    <section className="bg-gray-900 text-white p-6 rounded-2xl shadow-lg flex flex-col justify-between gap-4 border border-yellow-400">
-      <div>
-        <h2 className="text-2xl font-semibold mb-4 text-yellow-300">Session Log</h2>
-        <ul className="space-y-2 text-sm h-60 overflow-y-auto border border-gray-700 p-3 rounded bg-gray-800">
-          {log.length === 0 && (
-            <li className="italic text-gray-400">No check-ins yet.</li>
-          )}
-          {log.map((entry, i) => (
-            <li key={i}>{entry}</li>
-          ))}
-        </ul>
+    <div className="bg-gray-800 text-white p-6 rounded-2xl shadow-lg border border-yellow-400">
+      <h2 className="text-2xl font-semibold mb-4 text-yellow-300">Session Log</h2>
+      <div className="bg-gray-900 p-4 rounded-lg h-64 overflow-y-auto">
+        {sessionLog.length > 0 ? (
+          sessionLog.map((entry, index) => (
+            <p key={index} className="text-sm text-yellow-300 mb-2">
+              {entry}
+            </p>
+          ))
+        ) : (
+          <p className="text-sm text-gray-500">No entries yet. Start a session to log your progress!</p>
+        )}
       </div>
-
       <div className="flex gap-4 mt-4">
         <button
           onClick={copyToClipboard}
-          className="px-5 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition"
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-400 transition"
         >
-          Copy Log
+          Copy to Clipboard
         </button>
         <button
           onClick={exportToPDF}
-          className="px-5 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition"
+          className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-400 transition"
         >
-          Export as PDF
+          Export to PDF
+        </button>
+        <button
+          onClick={resetLog}
+          className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-400 transition"
+        >
+          Reset Log
         </button>
       </div>
-
-      <button
-        className="bg-red-500 hover:bg-red-400 text-white font-semibold py-2 rounded-xl transition w-full mt-4"
-        onClick={onResetLog}
-      >
-        Reset Log
-      </button>
-    </section>
+    </div>
   );
 }
 

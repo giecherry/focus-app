@@ -7,8 +7,8 @@
 ## ✨ Features
 
 - ⏱️ Customizable focus timer (set check-in intervals like 20, 30, or 45 mins)
-- 🎙️ Voice check-ins using Web Speech API (no typing mid-flow!)
-- 🎙️ Voice-to-text input using the Web Speech API
+- 🎙️ Voice check-ins, no typing mid-flow!
+- 🎙️ Voice-to-text input
 - 🧠 Automatic cleanup & bullet-point summaries (via LLM)
 - 📋 End-session reflection summary
 - 💾 LocalStorage log of past sessions

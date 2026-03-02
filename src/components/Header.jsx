@@ -1,5 +1,4 @@
-import React from "react";
-import logoBig from "../assets/logo-big.png";
+import logoBig from "/logo-big.png";
 
 function Header() {
   return (
