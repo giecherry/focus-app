@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
 import { Mic, MicOff, X } from "lucide-react";
 import useStore from "../store/useStore";
+import { cleanupText } from "../api/cleanup";
 
 function TextToSpeech({ isOpen, onClose, disabled = false }) {
-    const { transcript, listening, browserSupportsSpeechRecognition, resetTranscript } =
+    const { transcript, browserSupportsSpeechRecognition, resetTranscript } =
         useSpeechRecognition();
     const setTranscript = useStore((state) => state.setTranscript);
     const addLogEntry = useStore((state) => state.addLogEntry);
     const [isActive, setIsActive] = useState(false);
 
-    // Start or stop the microphone based on `isActive`
     useEffect(() => {
         if (isActive) {
             SpeechRecognition.startListening({ continuous: true, interimResults: true });
@@ -33,18 +33,31 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
         onClose();
     };
 
-    // Toggle microphone state
     const toggleMic = (e) => {
         e.stopPropagation();
         if (disabled || !browserSupportsSpeechRecognition) return;
         setIsActive((prev) => !prev);
     };
 
-    // Save the transcript and reset states
-    const saveTranscript = () => {
+    const saveTranscript = async () => {
         if (transcript.trim()) {
             const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            addLogEntry(`${timestamp} - ${transcript}`);
+            const originalEntry = `${timestamp} - ${transcript}`;
+
+            try {
+                const cleanedTranscript = await cleanupText(transcript);
+                const cleanedEntry = cleanedTranscript
+                    ? `${timestamp} - ${cleanedTranscript}`
+                    : null;
+                addLogEntry({
+                    original: originalEntry,
+                    cleaned: cleanedEntry,
+                });
+            } catch (error) {
+                console.error("Error during cleanup:", error.message);
+                addLogEntry({ original: originalEntry, cleaned: null });
+            }
+
             resetTranscript();
             setTranscript("");
             setIsActive(false);
@@ -66,7 +79,6 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
                 className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 relative flex flex-col items-center animate-in fade-in zoom-in duration-200"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Close Button */}
                 <button
                     onClick={handleClose}
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
@@ -79,7 +91,6 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
                     {isActive ? "I'm listening... speak naturally." : "Tap the microphone to start your update."}
                 </p>
 
-                {/* Mic Button */}
                 <div className="relative mb-6">
                     <button
                         type="button"
@@ -93,13 +104,11 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
                         {isActive ? <MicOff className="w-8 h-8" /> : <Mic className="w-8 h-8" />}
                     </button>
 
-                    {/* Pulsing Aura for active state */}
                     {isActive && (
                         <span className="absolute inset-0 rounded-full bg-[#f7006b] animate-ping opacity-20"></span>
                     )}
                 </div>
 
-                {/* Transcript Display */}
                 <div className="w-full bg-gray-100 p-4 rounded-lg border border-gray-200 text-gray-700 text-sm mb-6">
                     {transcript ? (
                         <p>{transcript}</p>

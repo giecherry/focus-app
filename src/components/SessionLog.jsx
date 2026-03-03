@@ -5,16 +5,33 @@ function SessionLog() {
   const sessionLog = useStore((state) => state.sessionLog);
   const resetLog = useStore((state) => state.resetLog);
 
+
   const copyToClipboard = () => {
-    const logText = sessionLog.join("\n");
+    const logText = sessionLog
+      .map((entry) => entry.cleaned || entry.original)
+      .join("\n");
     navigator.clipboard.writeText(logText);
     alert("Session log copied to clipboard!");
   };
 
   const exportToPDF = () => {
-    const logText = sessionLog.join("\n");
     const doc = new jsPDF();
-    doc.text(logText, 10, 10);
+    doc.setFont("Helvetica", "normal");
+    doc.setFontSize(12);
+
+    let y = 10;
+    doc.text("Session Log:", 10, y);
+    y += 10;
+
+    sessionLog.forEach((entry) => {
+      if (y > 280) {
+        doc.addPage();
+        y = 10;
+      }
+      doc.text(entry.cleaned || entry.original, 10, y);
+      y += 10;
+    });
+
     doc.save("session-log.pdf");
   };
 
@@ -25,7 +42,7 @@ function SessionLog() {
         {sessionLog.length > 0 ? (
           sessionLog.map((entry, index) => (
             <p key={index} className="text-xs sm:text-sm text-yellow-300 mb-2">
-              {entry}
+              {entry.cleaned ? entry.cleaned : entry.original}
             </p>
           ))
         ) : (
@@ -34,6 +51,7 @@ function SessionLog() {
           </p>
         )}
       </div>
+
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
         <button
           onClick={copyToClipboard}

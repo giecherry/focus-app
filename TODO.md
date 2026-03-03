@@ -1,7 +1,7 @@
 ## TO DOs:
 
 - Editable Session Log
-User Story: As a user, I want to edit or delete specific entries in my session log so that I can correct mistakes or remove unnecessary notes.
+User Story: As a user, I want to edit or delete specific entries in my session log so that I can correct mistakes or remove unnecessary notes. Also the transcript should be editable
 Features:
 Edit button for each log entry to modify the text.
 Delete button to remove specific entries.
@@ -42,14 +42,3 @@ User Story: As a user, I want my current session data (timers and logs) to persi
 Features:
 Save the current session's timer values and session log to sessionStorage.
 Load the current session's data from sessionStorage when the app is refreshed.
-
-- AI-Powered Cleanup and Summarization
-User Story: As a user, I want to use AI to clean up, summarize, or structure my session logs so that I can easily review and organize my thoughts.
-Features:
-Cleanup: Automatically remove filler words, repeated phrases, or irrelevant content from the session log.
-Summarization: Generate concise summaries of session logs for quick review.
-Structuring: Organize session logs into categories or bullet points for better readability.
-Implementation:
-Integrate an AI API to process and analyze session logs.
-Add a "Summarize" button to process the session log and display the cleaned-up or summarized version.
-Allow users to toggle between the original and AI-processed logs.
