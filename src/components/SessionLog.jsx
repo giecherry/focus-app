@@ -1,78 +1,114 @@
+import { useState } from "react";
+import { Clipboard, FileDown, Trash2 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import useStore from "../store/useStore";
 
 function SessionLog() {
   const sessionLog = useStore((state) => state.sessionLog);
   const resetLog = useStore((state) => state.resetLog);
+  const resetSummary = useStore((state) => state.resetSummary);
+  const [copyStatus, setCopyStatus] = useState("");
 
+  const logText = sessionLog
+    .map((entry) => entry.cleaned || entry.original)
+    .join("\n\n");
 
-  const copyToClipboard = () => {
-    const logText = sessionLog
-      .map((entry) => entry.cleaned || entry.original)
-      .join("\n");
-    navigator.clipboard.writeText(logText);
-    alert("Session log copied to clipboard!");
+  const copyToClipboard = async () => {
+    if (!logText) return;
+
+    await navigator.clipboard.writeText(logText);
+    setCopyStatus("Copied");
+    window.setTimeout(() => setCopyStatus(""), 1600);
   };
 
   const exportToPDF = () => {
+    if (!logText) return;
+
     const doc = new jsPDF();
     doc.setFont("Helvetica", "normal");
     doc.setFontSize(12);
 
-    let y = 10;
-    doc.text("Session Log:", 10, y);
+    let y = 14;
+    doc.text("Session Log", 10, y);
     y += 10;
 
     sessionLog.forEach((entry) => {
-      if (y > 280) {
-        doc.addPage();
-        y = 10;
-      }
-      doc.text(entry.cleaned || entry.original, 10, y);
-      y += 10;
+      const lines = doc.splitTextToSize(entry.cleaned || entry.original, 180);
+      lines.forEach((line) => {
+        if (y > 280) {
+          doc.addPage();
+          y = 14;
+        }
+        doc.text(line, 10, y);
+        y += 7;
+      });
+      y += 4;
     });
 
     doc.save("session-log.pdf");
   };
 
+  const handleResetLog = () => {
+    resetLog();
+    resetSummary();
+  };
+
   return (
-    <div className="bg-gray-800 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-yellow-400">
-      <h2 className="text-lg sm:text-2xl font-semibold mb-4 text-yellow-300">Session Log</h2>
-      <div className="bg-gray-900 p-3 sm:p-4 rounded-lg h-48 sm:h-64 overflow-y-auto">
+    <section className="bg-gray-800 text-white p-4 sm:p-6 rounded-lg shadow-lg border border-yellow-400 flex flex-col gap-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-yellow-300">
+          Running Notes
+        </p>
+        <h2 className="text-xl sm:text-2xl font-semibold text-white">Session Log</h2>
+      </div>
+
+      <div className="bg-gray-900 p-3 sm:p-4 rounded-lg h-64 overflow-y-auto border border-white/10">
         {sessionLog.length > 0 ? (
           sessionLog.map((entry, index) => (
-            <p key={index} className="text-xs sm:text-sm text-yellow-300 mb-2">
-              {entry.cleaned ? entry.cleaned : entry.original}
-            </p>
+            <article key={`${entry.original}-${index}`} className="mb-4 last:mb-0">
+              <p className="text-xs font-semibold text-yellow-300 mb-1">Check-in {index + 1}</p>
+              <p className="text-sm text-gray-100 whitespace-pre-wrap">
+                {entry.cleaned || entry.original}
+              </p>
+              {entry.cleanupStatus === "cleaning" && (
+                <p className="mt-1 text-xs text-gray-400">Cleaning up transcript...</p>
+              )}
+            </article>
           ))
         ) : (
-          <p className="text-xs sm:text-sm text-gray-500">
-            No entries yet. Start a session to log your progress!
+          <p className="text-sm text-gray-400">
+            No entries yet. Start a session and use check-ins to capture what changed.
           </p>
         )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={copyToClipboard}
-          className="px-4 py-2 bg-[#85d8ff] text-white rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm sm:text-base"
+          disabled={!sessionLog.length}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#85d8ff] text-black rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm disabled:opacity-50"
         >
-          Copy to Clipboard
+          <Clipboard className="h-4 w-4" />
+          {copyStatus || "Copy"}
         </button>
         <button
           onClick={exportToPDF}
-          className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-400 transition text-sm sm:text-base"
+          disabled={!sessionLog.length}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-green-400 text-black rounded-lg shadow-md hover:bg-green-300 transition text-sm disabled:opacity-50"
         >
-          Export to PDF
+          <FileDown className="h-4 w-4" />
+          PDF
         </button>
         <button
-          onClick={resetLog}
-          className="px-4 py-2 bg-[#f7006b] text-white rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
+          onClick={handleResetLog}
+          disabled={!sessionLog.length}
+          className="inline-flex items-center gap-2 px-4 py-2 bg-[#f7006b] text-white rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm disabled:opacity-50"
         >
-          Reset Log
+          <Trash2 className="h-4 w-4" />
+          Clear
         </button>
       </div>
-    </div>
+    </section>
   );
 }
 

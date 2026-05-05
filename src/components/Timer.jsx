@@ -1,206 +1,269 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { Pause, Play, RotateCcw, Square, TimerReset } from "lucide-react";
 import useStore from "../store/useStore";
 import TextToSpeech from "./TextToSpeech";
 
+const formatClock = (totalSeconds) => {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}:${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+};
+
 function Timer() {
-  const sessionState = useStore((state) => state.sessionState); // Access session state
+  const sessionState = useStore((state) => state.sessionState);
   const startSession = useStore((state) => state.startSession);
   const pauseSession = useStore((state) => state.pauseSession);
   const resumeSession = useStore((state) => state.resumeSession);
   const finishSession = useStore((state) => state.finishSession);
   const resetSession = useStore((state) => state.resetSession);
+  const resetSummary = useStore((state) => state.resetSummary);
 
-  const [sessionDuration, setSessionDuration] = useState(1 * 3600); // Default: 1 hour
-  const [intervalDuration, setIntervalDuration] = useState(25 * 60); // Default: 25 minutes
+  const [sessionDuration, setSessionDuration] = useState(1 * 3600);
+  const [intervalDuration, setIntervalDuration] = useState(25 * 60);
   const [sessionRemaining, setSessionRemaining] = useState(1 * 3600);
   const [intervalRemaining, setIntervalRemaining] = useState(25 * 60);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const timerRef = useRef(null);
+  const pausedForCheckInRef = useRef(false);
 
-  // Start the session
   const handleStartSession = () => {
-    setSessionRemaining(sessionDuration);
-    setIntervalRemaining(intervalDuration);
-    resetSession(); // Reset session state to "not_started"
-    startSession(); // Set session state to "running"
-
-    timerRef.current = setInterval(() => {
-      setSessionRemaining((prev) => Math.max(prev - 1, 0));
-      setIntervalRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          finishSession(); // Mark session as finished
-          setIsModalOpen(true); // Open the check-in modal
-          return intervalDuration;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Pause the session
-  const handlePauseSession = () => {
-    pauseSession(); // Set session state to "paused"
-    clearInterval(timerRef.current);
-  };
-
-  // Resume the session
-  const handleResumeSession = () => {
-    resumeSession(); // Set session state to "running"
-
-    timerRef.current = setInterval(() => {
-      setSessionRemaining((prev) => Math.max(prev - 1, 0));
-      setIntervalRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current);
-          finishSession(); // Mark session as finished
-          setIsModalOpen(true); // Open the check-in modal
-          return intervalDuration;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  };
-
-  // Stop the session completely
-  const handleStopSession = () => {
-    finishSession(); // Set session state to "finished"
-    clearInterval(timerRef.current);
+    resetSummary();
     setSessionRemaining(sessionDuration);
     setIntervalRemaining(intervalDuration);
     setIsModalOpen(false);
+    pausedForCheckInRef.current = false;
+    startSession();
   };
 
-  // Open the check-in modal
+  const handlePauseSession = () => {
+    pausedForCheckInRef.current = false;
+    pauseSession();
+  };
+
+  const handleResumeSession = () => {
+    pausedForCheckInRef.current = false;
+    resumeSession();
+  };
+
+  const handleFinishSession = () => {
+    pausedForCheckInRef.current = false;
+    setIsModalOpen(false);
+    finishSession();
+  };
+
   const handleCheckIn = () => {
-    pauseSession(); // Pause the session during check-in
-    clearInterval(timerRef.current);
+    pausedForCheckInRef.current = true;
+    pauseSession();
     setIsModalOpen(true);
   };
 
-  // Close the check-in modal and resume the session
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    if (sessionState === "paused") {
-      handleResumeSession(); // Resume the session if it was paused
+    if (pausedForCheckInRef.current && sessionRemaining > 0) {
+      pausedForCheckInRef.current = false;
+      resumeSession();
     }
   };
 
+  const handleResetSession = () => {
+    pausedForCheckInRef.current = false;
+    setIsModalOpen(false);
+    setSessionRemaining(sessionDuration);
+    setIntervalRemaining(intervalDuration);
+    resetSession();
+  };
+
   useEffect(() => {
-    return () => clearInterval(timerRef.current); // Cleanup on unmount
-  }, []);
+    if (sessionState !== "running") {
+      clearInterval(timerRef.current);
+      return undefined;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSessionRemaining((previous) => {
+        const next = Math.max(previous - 1, 0);
+
+        if (next === 0) {
+          pausedForCheckInRef.current = false;
+          setIsModalOpen(false);
+          finishSession();
+        }
+
+        return next;
+      });
+
+      setIntervalRemaining((previous) => {
+        if (sessionRemaining <= 1) {
+          return previous;
+        }
+
+        if (previous <= 1) {
+          pausedForCheckInRef.current = true;
+          pauseSession();
+          setIsModalOpen(true);
+          return intervalDuration;
+        }
+
+        return previous - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+  }, [finishSession, intervalDuration, pauseSession, sessionRemaining, sessionState]);
+
+  const isConfigLocked = sessionState === "running" || sessionState === "paused";
 
   return (
-    <section className="bg-gray-900 text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg border border-yellow-400 flex flex-col items-center">
-      <h2 className="text-lg sm:text-2xl font-semibold mb-4 text-yellow-300">Focus Timer</h2>
-
-      {/* Session Duration Selector */}
-      <div className="w-full mb-4">
-        <label className="block text-xs sm:text-sm text-yellow-300 mb-2">Session Duration (hours):</label>
-        <select
-          value={sessionDuration / 3600}
-          onChange={(e) => {
-            const newDuration = e.target.value * 3600;
-            setSessionDuration(newDuration);
-            setSessionRemaining(newDuration);
-          }}
-          disabled={sessionState === "running" || sessionState === "paused"}
-          className="w-full bg-gray-800 text-white rounded-lg p-2 text-xs sm:text-sm"
-        >
-          {[...Array(12)].map((_, i) => (
-            <option key={i} value={i + 1}>
-              {i + 1} hour{(i + 1) > 1 ? "s" : ""}
-            </option>
-          ))}
-        </select>
+    <section className="bg-[#161616] text-white p-4 sm:p-6 rounded-lg shadow-lg border border-yellow-400 flex flex-col gap-5">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-yellow-300">
+          Current Session
+        </p>
+        <h2 className="text-xl sm:text-2xl font-semibold text-white">Focus Timer</h2>
       </div>
 
-      {/* Interval Duration Selector */}
-      <div className="w-full mb-4">
-        <label className="block text-xs sm:text-sm text-yellow-300 mb-2">Interval Duration (minutes):</label>
-        <select
-          value={intervalDuration / 60}
-          onChange={(e) => {
-            const newInterval = e.target.value * 60;
-            setIntervalDuration(newInterval);
-            setIntervalRemaining(newInterval);
-          }}
-          disabled={sessionState === "running" || sessionState === "paused"}
-          className="w-full bg-gray-800 text-white rounded-lg p-2 text-xs sm:text-sm"
-        >
-          {[15, 20, 25, 30, 45, 60].map((minutes) => (
-            <option key={minutes} value={minutes}>
-              {minutes} minutes
-            </option>
-          ))}
-        </select>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <label className="flex flex-col gap-2 text-xs sm:text-sm text-yellow-300">
+          Session length
+          <select
+            value={sessionDuration / 3600}
+            onChange={(event) => {
+              const newDuration = Number(event.target.value) * 3600;
+              setSessionDuration(newDuration);
+              setSessionRemaining(newDuration);
+            }}
+            disabled={isConfigLocked}
+            className="w-full bg-gray-900 text-white rounded-lg border border-white/10 p-2 text-sm disabled:opacity-50"
+          >
+            {[...Array(12)].map((_, i) => (
+              <option key={i} value={i + 1}>
+                {i + 1} hour{(i + 1) > 1 ? "s" : ""}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-2 text-xs sm:text-sm text-yellow-300">
+          Check-in every
+          <select
+            value={intervalDuration / 60}
+            onChange={(event) => {
+              const newInterval = Number(event.target.value) * 60;
+              setIntervalDuration(newInterval);
+              setIntervalRemaining(newInterval);
+            }}
+            disabled={isConfigLocked}
+            className="w-full bg-gray-900 text-white rounded-lg border border-white/10 p-2 text-sm disabled:opacity-50"
+          >
+            {[5, 10, 15, 20, 25, 30, 45, 60].map((minutes) => (
+              <option key={minutes} value={minutes}>
+                {minutes} minutes
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
-      {/* Timers */}
-      <div className="text-center mb-4">
-        <div className="text-4xl sm:text-6xl font-mono">
-          {Math.floor(intervalRemaining / 60)}:{(intervalRemaining % 60).toString().padStart(2, "0")}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="rounded-lg bg-gray-900 p-4 border border-white/10">
+          <div className="text-4xl sm:text-5xl font-mono text-white tabular-nums">
+            {formatClock(intervalRemaining)}
+          </div>
+          <div className="text-xs sm:text-sm mt-1 text-yellow-300">Next check-in</div>
         </div>
-        <div className="text-xs sm:text-sm mt-1 text-yellow-300">Interval Timer</div>
-      </div>
 
-      <div className="text-center mb-4">
-        <div className="text-4xl sm:text-6xl font-mono">
-          {Math.floor(sessionRemaining / 3600)}:
-          {Math.floor((sessionRemaining % 3600) / 60).toString().padStart(2, "0")}:
-          {(sessionRemaining % 60).toString().padStart(2, "0")}
+        <div className="rounded-lg bg-gray-900 p-4 border border-white/10">
+          <div className="text-4xl sm:text-5xl font-mono text-white tabular-nums">
+            {formatClock(sessionRemaining)}
+          </div>
+          <div className="text-xs sm:text-sm mt-1 text-yellow-300">Session left</div>
         </div>
-        <div className="text-xs sm:text-sm mt-1 text-yellow-300">Session Timer</div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+      <div className="flex flex-wrap gap-2">
         {sessionState === "not_started" && (
           <button
             onClick={handleStartSession}
-            className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
+            className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
           >
-            Start Session
+            <Play className="h-4 w-4" />
+            Start
           </button>
         )}
+
         {sessionState === "running" && (
           <>
             <button
               onClick={handlePauseSession}
-              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-blue-500 rounded-lg shadow-md hover:bg-blue-400 transition text-sm sm:text-base"
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-[#85d8ff] rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm sm:text-base"
             >
-              Pause Session
-            </button>
-            <button
-              onClick={handleStopSession}
-              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-[#f7006b] rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
-            >
-              Stop Session
+              <Pause className="h-4 w-4" />
+              Pause
             </button>
             <button
               onClick={handleCheckIn}
-              className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-[#85d8ff] rounded-lg shadow-md hover:bg-[#9de0ff] transition text-sm sm:text-base"
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
             >
-              Start Check-In
+              <TimerReset className="h-4 w-4" />
+              Check In
+            </button>
+            <button
+              onClick={handleFinishSession}
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-white bg-[#f7006b] rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
+            >
+              <Square className="h-4 w-4" />
+              Finish
             </button>
           </>
         )}
+
         {sessionState === "paused" && (
+          <>
+            <button
+              onClick={handleResumeSession}
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-green-400 rounded-lg shadow-md hover:bg-green-300 transition text-sm sm:text-base"
+            >
+              <Play className="h-4 w-4" />
+              Resume
+            </button>
+            <button
+              onClick={handleCheckIn}
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
+            >
+              <TimerReset className="h-4 w-4" />
+              Check In
+            </button>
+            <button
+              onClick={handleFinishSession}
+              className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-white bg-[#f7006b] rounded-lg shadow-md hover:bg-[#ff4c7d] transition text-sm sm:text-base"
+            >
+              <Square className="h-4 w-4" />
+              Finish
+            </button>
+          </>
+        )}
+
+        {sessionState === "finished" && (
           <button
-            onClick={handleResumeSession}
-            className="px-4 py-2 sm:px-5 sm:py-2 font-semibold text-black bg-green-500 rounded-lg shadow-md hover:bg-green-400 transition text-sm sm:text-base"
+            onClick={handleResetSession}
+            className="inline-flex items-center gap-2 px-4 py-2 font-semibold text-black bg-yellow-400 rounded-lg shadow-md hover:bg-yellow-300 transition text-sm sm:text-base"
           >
-            Resume Session
+            <RotateCcw className="h-4 w-4" />
+            New Session
           </button>
         )}
       </div>
 
-      {/* Text-to-Speech Modal */}
-      <TextToSpeech
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-      />
+      <TextToSpeech isOpen={isModalOpen} onClose={handleCloseModal} />
     </section>
   );
 }

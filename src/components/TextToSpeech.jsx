@@ -11,7 +11,10 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
         useSpeechRecognition();
     const setTranscript = useStore((state) => state.setTranscript);
     const addLogEntry = useStore((state) => state.addLogEntry);
+    const updateLogEntry = useStore((state) => state.updateLogEntry);
     const [isActive, setIsActive] = useState(false);
+    const [draft, setDraft] = useState("");
+    const [error, setError] = useState("");
 
     useEffect(() => {
         if (isActive) {
@@ -23,6 +26,9 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
 
     useEffect(() => {
         setTranscript(transcript);
+        if (transcript) {
+            setDraft(transcript);
+        }
     }, [transcript, setTranscript]);
 
     const handleClose = () => {
@@ -36,35 +42,46 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
     const toggleMic = (e) => {
         e.stopPropagation();
         if (disabled || !browserSupportsSpeechRecognition) return;
+        setError("");
         setIsActive((prev) => !prev);
     };
 
     const saveTranscript = async () => {
-        if (transcript.trim()) {
+        setError("");
+        if (draft.trim()) {
+            SpeechRecognition.stopListening();
+            setIsActive(false);
             const timestamp = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-            const originalEntry = `${timestamp} - ${transcript}`;
+            const logId = crypto.randomUUID();
+            const savedDraft = draft.trim();
+            const originalEntry = `${timestamp} - ${savedDraft}`;
 
-            try {
-                const cleanedTranscript = await cleanupText(transcript);
-                const cleanedEntry = cleanedTranscript
-                    ? `${timestamp} - ${cleanedTranscript}`
-                    : null;
-                addLogEntry({
-                    original: originalEntry,
-                    cleaned: cleanedEntry,
-                });
-            } catch (error) {
-                console.error("Error during cleanup:", error.message);
-                addLogEntry({ original: originalEntry, cleaned: null });
-            }
+            addLogEntry({
+                id: logId,
+                original: originalEntry,
+                cleaned: null,
+                cleanupStatus: "cleaning",
+            });
 
             resetTranscript();
             setTranscript("");
-            setIsActive(false);
-            SpeechRecognition.stopListening();
+            setDraft("");
             onClose();
+
+            try {
+                const cleanedTranscript = await cleanupText(savedDraft);
+                const cleanedEntry = cleanedTranscript
+                    ? `${timestamp} - ${cleanedTranscript}`
+                    : null;
+                updateLogEntry(logId, {
+                    cleaned: cleanedEntry,
+                    cleanupStatus: cleanedEntry ? "done" : "failed",
+                });
+            } catch {
+                updateLogEntry(logId, { cleanupStatus: "failed" });
+            }
         } else {
-            alert("No text to save. Please speak into the microphone.");
+            setError("No text yet. Start the mic or type a quick note before saving.");
         }
     };
 
@@ -81,6 +98,7 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
             >
                 <button
                     onClick={handleClose}
+                    aria-label="Close check-in"
                     className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
                 >
                     <X className="w-5 h-5" />
@@ -88,12 +106,19 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
 
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">Voice Check-In</h2>
                 <p className="text-gray-500 text-sm mb-4 text-center">
-                    {isActive ? "I'm listening... speak naturally." : "Tap the microphone to start your update."}
+                    {isActive ? "Listening now. Talk through the messy middle." : "Tap the microphone and brain dump what changed."}
                 </p>
+
+                {!browserSupportsSpeechRecognition && (
+                    <div className="w-full rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900 mb-4">
+                        Speech recognition is not available in this browser. You can still type your check-in below.
+                    </div>
+                )}
 
                 <div className="relative mb-6">
                     <button
                         type="button"
+                        aria-label={isActive ? "Stop listening" : "Start listening"}
                         className={`relative z-10 p-8 rounded-full shadow-xl transition-all duration-300 ${isActive
                             ? "bg-red-500 text-white scale-110"
                             : "bg-yellow-400 hover:bg-yellow-500 text-black"
@@ -109,20 +134,23 @@ function TextToSpeech({ isOpen, onClose, disabled = false }) {
                     )}
                 </div>
 
-                <div className="w-full bg-gray-100 p-4 rounded-lg border border-gray-200 text-gray-700 text-sm mb-6">
-                    {transcript ? (
-                        <p>{transcript}</p>
-                    ) : (
-                        <p className="italic text-gray-400">Your speech will appear here...</p>
-                    )}
-                </div>
+                <textarea
+                    value={draft}
+                    onChange={(event) => {
+                        setDraft(event.target.value);
+                        setTranscript(event.target.value);
+                    }}
+                    placeholder="Your check-in will appear here..."
+                    className="w-full min-h-36 resize-y bg-gray-100 p-4 rounded-lg border border-gray-200 text-gray-700 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
 
-                {/* Save Button */}
+                {error && <p className="w-full text-sm text-[#f7006b] mb-3">{error}</p>}
+
                 <button
                     onClick={saveTranscript}
-                    className="px-6 py-2 bg-[#85d8ff] text-white rounded-lg shadow-md hover:bg-[#9de0ff] transition"
+                    className="px-6 py-2 bg-[#85d8ff] text-black rounded-lg shadow-md hover:bg-[#9de0ff] transition"
                 >
-                    Save
+                    Save Check-In
                 </button>
             </div>
         </div>
