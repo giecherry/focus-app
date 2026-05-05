@@ -1,5 +1,6 @@
 # 🐝 BeeFocused
 
+
 **BeeFocused** is a minimalist hyperfocus assistant built to gently guide you through your deep work sessions — without snapping you out of the zone. Inspired by real-life check-ins, this app helps you stay aware of your focus, log your thoughts, and reflect with clarity.
 
 ---
