@@ -11,20 +11,37 @@
 - 🎙️ Voice-to-text input
 - 🧠 Automatic cleanup & bullet-point summaries (via LLM)
 - 📋 End-session reflection summary
-- 💾 LocalStorage log of past sessions
 - 📤 Export notes to copy or download as PDF
-- 🌘 Dark mode with a cozy bee-themed interface
+
 
 ---
 
 ## 🌱 Future Features & Ideas
 
 - 🐝 Gentle reminders to stretch, drink water, or take a snack break
-- 🧠 Smarter summaries using GPT or Whisper (via OpenAI or OpenRouter)
 - ⏳ See total time spent on each type of task/project
 - 📱 Mobile-first polish & PWA support
 - 🐾 Cute bee animations for micro-interactions (optional)
-- 🧑‍💻 Self-hosted backend for syncing across devices (if needed)
+- 🌘 Dark mode with a cozy bee-themed interface
+- 💾 LocalStorage log of past sessions
+- 🖥️ Desktop/local app mode for personal use on macOS
+- 🔑 Bring-your-own-API-key mode so users can run summaries with their own provider key
+- 📦 Reusable open-source setup for people who want to self-host the app
+
+---
+
+## 🔐 API Key Safety
+
+The deployed frontend should never contain an AI provider API key. Browser-exposed environment variables such as `VITE_*` are public and should only contain non-secret values like the backend URL.
+
+For the hosted demo, API calls should go through a small backend with:
+
+- `OPENROUTER_API_KEY` stored only as a backend environment variable
+- `ALLOWED_ORIGINS` limited to the deployed frontend URL and local development URLs
+- basic rate limiting enabled
+- request body size limits
+- no transcript or API key logging
+- spending/credit limits configured in the OpenRouter dashboard
 
 ---
 
